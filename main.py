@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 from models import UserModel, PyObjectId
 from typing import List
@@ -11,34 +11,39 @@ client = AsyncIOMotorClient(MongoDB_URL)
 database = client.users_db
 user_collection = database.get_collection("users_collection")
 
+
+# Helper to convert MongoDB document to dict
 def user_helper(user) -> dict:
-    return{
+    return {
         "id": str(user["_id"]),
-        "name":user["name"],
-        "email":user["email"],
+        "name": user["name"],
+        "email": user["email"],
     }
 
-#create user
-@app.post("/users", response_model = UserModel)
-async def create_user(user: UserModel):
-    user = user.dict(by_alias =True)
-    user.pop("id",None)
-    new_user =  await user_collection.insert_one(user)
-    create_user = await user_collection.find_one({"id": new_user.inserted_id})
-    return user_helper
 
-#Get all users
-@app.get("/users/{id}")
+# ✅ Create user
+@app.post("/users", response_model=UserModel)
+async def create_user(user: UserModel):
+    user = user.dict(by_alias=True)
+    user.pop("id", None)
+    new_user = await user_collection.insert_one(user)
+    created_user = await user_collection.find_one({"_id": new_user.inserted_id})
+    return user_helper(created_user)
+
+
+# ✅ Get user by ID
+@app.get("/users/{id}", response_model=UserModel)
 async def get_user(id: str):
     if not PyObjectId.is_valid(id):
-        raise HTTPEXception(status_code=400, detail="Invalid user id")
-    
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+
     user = await user_collection.find_one({"_id": PyObjectId(id)})
     if user is None:
-        raise HTTPEXception(status_code=404, detail = "User not found")
+        raise HTTPException(status_code=404, detail="User not found")
     return user_helper(user)
 
-# Update user by ID
+
+# ✅ Update user by ID
 @app.put("/users/{id}", response_model=UserModel)
 async def update_user(id: str, user: UserModel):
     if not PyObjectId.is_valid(id):
@@ -57,7 +62,8 @@ async def update_user(id: str, user: UserModel):
     updated_user = await user_collection.find_one({"_id": PyObjectId(id)})
     return user_helper(updated_user)
 
-# Delete user by ID
+
+# ✅ Delete user by ID
 @app.delete("/users/{id}")
 async def delete_user(id: str):
     if not PyObjectId.is_valid(id):
