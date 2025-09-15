@@ -2,10 +2,11 @@ from fastapi import FastAPI, HTTPException
 from motor.motor_asyncio import AsyncIOMotorClient
 from models import UserModel, PyObjectId
 from typing import List
+import os
 
 app = FastAPI()
 
-MongoDB_URL = "mongodb+srv://pawanmagapalli_db_user:GivIjRJewpiU3wXF@cluster0.uvidgbt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MongoDB_URL = os.getenv("MONGO_URL")
 
 client = AsyncIOMotorClient(MongoDB_URL)
 database = client.users_db
