@@ -12,7 +12,7 @@ database = client.users_db
 user_collection = database.get_collection("users_collection")
 
 
-# Helper to convert MongoDB document to dict
+
 def user_helper(user) -> dict:
     return {
         "id": str(user["_id"]),
@@ -21,7 +21,7 @@ def user_helper(user) -> dict:
     }
 
 
-# ✅ Create user
+
 @app.post("/users", response_model=UserModel)
 async def create_user(user: UserModel):
     user = user.dict(by_alias=True)
@@ -31,7 +31,7 @@ async def create_user(user: UserModel):
     return user_helper(created_user)
 
 
-# ✅ Get user by ID
+
 @app.get("/users/{id}", response_model=UserModel)
 async def get_user(id: str):
     if not PyObjectId.is_valid(id):
@@ -43,14 +43,14 @@ async def get_user(id: str):
     return user_helper(user)
 
 
-# ✅ Update user by ID
+
 @app.put("/users/{id}", response_model=UserModel)
 async def update_user(id: str, user: UserModel):
     if not PyObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
     user_dict = user.dict(by_alias=True)
-    user_dict.pop("_id", None)  # Prevent changing _id
+    user_dict.pop("_id", None)  
 
     result = await user_collection.update_one(
         {"_id": PyObjectId(id)}, {"$set": user_dict}
@@ -63,7 +63,7 @@ async def update_user(id: str, user: UserModel):
     return user_helper(updated_user)
 
 
-# ✅ Delete user by ID
+
 @app.delete("/users/{id}")
 async def delete_user(id: str):
     if not PyObjectId.is_valid(id):
